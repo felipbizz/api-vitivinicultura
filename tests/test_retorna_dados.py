@@ -6,7 +6,7 @@ from tech_clg.app import app
 
 correct_headers = {
     'Accept': 'application/json',
-    'Authorization': 'Bearer felipe',
+    'Authorization': 'Bearer teste',
     'Content-Type': 'application/json',
 }
 client = TestClient(app)
@@ -71,15 +71,15 @@ def test_pais_tables_year():
     assert response.status_code == HTTPStatus.OK
 
 
-# def test_auth():
-#
-#     headers = {
-#         'Accept': 'application/json',
-#         'Authorization': 'Bearer senha_errada',
-#         'Content-Type': 'application/json'
-#     }
-#     data = {
-#         'df_key': 'Producao',
-#     }
-#     response = client.post('/retorna_dados/', headers=correct_headers, json=data)
-#     assert response.status_code == 401
+def test_auth():
+
+    wrong_headers = {
+        'Accept': 'application/json',
+        'Authorization': 'Bearer senha_errada',
+        'Content-Type': 'application/json'
+    }
+    data = {
+        'df_key': 'Producao',
+    }
+    response = client.post('/retorna_dados/', headers=wrong_headers, json=data)
+    assert response.status_code == 401

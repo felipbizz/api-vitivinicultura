@@ -6,7 +6,6 @@ from fastapi import Depends, FastAPI, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from pydantic import BaseModel, Field, validator
 from unidecode import unidecode
-
 from tech_clg.vitivinicultura import Vitivinicultura
 
 app = FastAPI()
@@ -18,8 +17,10 @@ ultima_data_coletada = datetime.date(2023, 12, 21)
 vt.get_df_dict(modified_date, ultima_data_coletada)
 df_dict = vt.df_dict
 
+max_year = ultima_data_coletada.year
+min_year = 1970
 
-class DFKeys(str, Enum):
+class Categorias(str, Enum):
     Producao = 'Producao'
     ProcessaViniferas = 'ProcessaViniferas'
     ProcessaAmericanas = 'ProcessaAmericanas'
@@ -36,12 +37,8 @@ class DFKeys(str, Enum):
     ExpSuco = 'ExpSuco'
 
 
-max_year = ultima_data_coletada.year
-min_year = 1970
-
-
-class GetDataRequest(BaseModel):
-    df_key: DFKeys
+class RetornaDadosRequest(BaseModel):
+    df_key: Categorias
     year: Optional[int] = Field(None, ge=min_year, le=max_year)
 
     @validator('year')
@@ -51,17 +48,17 @@ class GetDataRequest(BaseModel):
                 raise ValueError(f'Year must be between {min_year} and {max_year}')
         return v
 
+secret_token = 'teste'
 
 fake_users_db = {
     'felipe': {
         'username': 'felipe',
         'full_name': 'Felipe Bizzo',
         'email': 'johndoe@example.com',
-        'hashed_password': 'secret',
+        'hashed_password': secret_token,
         'disabled': False,
     }
 }
-
 
 def fake_hash_password(password: str):
     return password
@@ -125,14 +122,21 @@ async def login(form_data: Annotated[OAuth2PasswordRequestForm, Depends()]):
             detail=f'Incorrect password {user.hashed_password} and {hashed_password}',
         )
 
-    return {'access_token': user.username, 'token_type': 'bearer'}
+    return {'access_token': user.hashed_password, 'token_type': 'bearer'}
 
 
 @app.post('/retorna_dados/')
-async def get_data(data: GetDataRequest, Authorization: str = Depends(oauth2_scheme)):
+async def get_data(data: RetornaDadosRequest, Authorization: str = Depends(oauth2_scheme)):
     """
     Function to retrieve data based on the key and optional year
     """
+    if Authorization != secret_token:
+        raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail='Invalid authentication credentials',
+                headers={'WWW-Authenticate': 'Bearer'},
+            )
+
     df_key = data.df_key
     year = data.year
 
