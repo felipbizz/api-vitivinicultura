@@ -6,6 +6,7 @@ from fastapi import Depends, FastAPI, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from pydantic import BaseModel, Field, validator
 from unidecode import unidecode
+
 from tech_clg.vitivinicultura import Vitivinicultura
 
 app = FastAPI()
@@ -19,6 +20,7 @@ df_dict = vt.df_dict
 
 max_year = ultima_data_coletada.year
 min_year = 1970
+
 
 class Categorias(str, Enum):
     Producao = 'Producao'
@@ -48,6 +50,7 @@ class RetornaDadosRequest(BaseModel):
                 raise ValueError(f'Year must be between {min_year} and {max_year}')
         return v
 
+
 secret_token = 'teste'
 
 fake_users_db = {
@@ -59,6 +62,7 @@ fake_users_db = {
         'disabled': False,
     }
 }
+
 
 def fake_hash_password(password: str):
     return password
@@ -132,10 +136,10 @@ async def get_data(data: RetornaDadosRequest, Authorization: str = Depends(oauth
     """
     if Authorization != secret_token:
         raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail='Invalid authentication credentials',
-                headers={'WWW-Authenticate': 'Bearer'},
-            )
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail='Invalid authentication credentials',
+            headers={'WWW-Authenticate': 'Bearer'},
+        )
 
     df_key = data.df_key
     year = data.year

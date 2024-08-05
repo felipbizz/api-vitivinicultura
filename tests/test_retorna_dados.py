@@ -1,5 +1,6 @@
 from http import HTTPStatus
 
+from fastapi import status
 from fastapi.testclient import TestClient
 
 from tech_clg.app import app
@@ -72,14 +73,13 @@ def test_pais_tables_year():
 
 
 def test_auth():
-
     wrong_headers = {
         'Accept': 'application/json',
         'Authorization': 'Bearer senha_errada',
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
     }
     data = {
         'df_key': 'Producao',
     }
     response = client.post('/retorna_dados/', headers=wrong_headers, json=data)
-    assert response.status_code == 401
+    assert response.status_code == status.HTTP_401_UNAUTHORIZED
